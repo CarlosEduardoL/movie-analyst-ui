@@ -1,8 +1,10 @@
 pipeline {
     agent any
-    stage("deploy"){
-        steps {
-            echo "deploy ${params.TAG}"
+    stages {
+        stage("deploy"){
+            steps {
+                echo "deploy ${params.TAG}"
+            }
         }
     }
 }
