@@ -2,14 +2,22 @@ pipeline {
     agent any
     environment {
         HOME = '.'
-        container = null
         PROJECT = "zeronetdev/rampup-front"
+        container = null
+        failed_stage = null
     }
     stages {
         stage("build front image"){
             steps {
                 script {
                     container = docker.build(PROJECT)
+                }
+            }
+            post {
+                failure {
+                    script {
+                        failed_stage = "build image"
+                    }
                 }
             }
         }
@@ -21,10 +29,24 @@ pipeline {
                     }
                 }
             }
+            post {
+                failure {
+                    script {
+                        failed_stage = "push image"
+                    }
+                }
+            }
         }
         stage("clean") {
             steps {
-                sh 'for image in \$(sudo docker images | grep ${env.PROJECT} | awk \'{print \$2}\'| uniq); do sudo docker rmi -f \$image; done'
+                sh "for image in \$(docker images | grep ${env.PROJECT} | awk \'{print \$3}\'| uniq); do docker rmi -f \$image; done"
+            }
+            post {
+                failure {
+                    script {
+                        failed_stage = "clean"
+                    }
+                }
             }
         }
     }
