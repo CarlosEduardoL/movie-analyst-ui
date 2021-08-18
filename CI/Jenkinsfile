@@ -3,7 +3,6 @@ pipeline {
     environment {
         HOME = '.'
         container = null
-        TAG = """${sh(returnStdout: true, script: 'date +%s%N')}"""
         PROJECT = "zeronetdev/rampup-front"
     }
     stages {
@@ -18,7 +17,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        container.push("${TAG}")
+                        container.push("${BUILD_NUMBER}")
                     }
                 }
             }
