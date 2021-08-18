@@ -4,19 +4,13 @@ pipeline {
         HOME = '.'
         PROJECT = "zeronetdev/rampup-front"
         container = null
-        failed_stage = ""
-        trace = ""
+        failed_stage = null
     }
     stages {
         stage("build front image"){
             steps {
                 script {
-                    try {
-                        container = docker.build(PROJECT)
-                    } catch(e) {
-                        trace = getStackTrace(e)
-                        error(trace)
-                    }
+                    container = docker.build(PROJECT)
                 }
             }
             post {
@@ -30,13 +24,8 @@ pipeline {
         stage("push image"){
             steps {
                 script {
-                    try{
-                        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                            container.push("${BUILD_NUMBER}")
-                        }
-                    } catch(e) {
-                        trace = getStackTrace(e)
-                        error(trace)
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        container.push("${BUILD_NUMBER}")
                     }
                 }
             }
@@ -50,14 +39,7 @@ pipeline {
         }
         stage("clean") {
             steps {
-                script {
-                    try{
-                        sh "for image in \$(docker images | grep ${PROJECT} | awk \'{print \$3}\'| uniq); do docker rmi -f \$image; done; exit 1"
-                    } catch(e) {
-                        trace = getStackTrace(e)
-                        error(trace)
-                    }
-                }
+                sh "for image in \$(docker images | grep ${env.PROJECT} | awk \'{print \$3}\'| uniq); do docker rmi -f \$image; done"
             }
             post {
                 failure {
@@ -73,16 +55,8 @@ pipeline {
             script {
                 mail to: 'carlos.lizalda1@gmail.com',
                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-                body: "Something is wrong with ${env.BUILD_URL} on ${failed_stage} stage\n${trace}"
+                body: "Something is wrong with ${env.BUILD_URL} on ${failed_stage} stage"
             }
         }
     }
-}
-
-def String getStackTrace(Throwable aThrowable)
-{
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream ps = new PrintStream(baos, true);
-    aThrowable.printStackTrace(ps);
-    return baos.toString();
 }
