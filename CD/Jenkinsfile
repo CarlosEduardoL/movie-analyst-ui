@@ -2,16 +2,17 @@ pipeline {
     agent {
         docker { 
             image 'zeronetdev/rampup-provcli:0.0.1'
-            args '-v /home/ubuntu/RampUp/ansible/playbooks:/playbooks -v /home/ubuntu/.aws:/root/.aws'
+            args '-u root -v /home/ubuntu/RampUp/ansible/playbooks:/playbooks -v /home/ubuntu/.aws:/root/.aws'
         }
     }
     stages {
         stage("deploy"){
             steps {
-                dir("/playbooks"){
-                    sh "ls"
-                    sh "ansible -i inventory_aws_ec2.yml -m ping"
-                }
+                sh 'echo "cd /playbooks" >> script.sh'
+                sh 'echo "ls" >> script.sh'
+                sh 'echo "ansible -i inventory_aws_ec2.yml -m ping" >> script.sh'
+                sh 'chmod +x script.sh'
+                sh './script.sh'
                 sh "echo ${params.TAG}"
             }
         }
