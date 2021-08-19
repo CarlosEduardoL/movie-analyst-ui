@@ -1,9 +1,15 @@
 pipeline {
-    agent any
+    agent {
+        docker { 
+            image 'zeronetdev/rampup-provcli:0.0.1'
+            args '-v /home/ubuntu/RampUp/ansible/playbook:/playbook'
+        }
+    }
     stages {
         stage("deploy"){
             steps {
-                sh "docker run -it --rm zeronetdev/rampup-provcli echo ${params.TAG}"
+                sh "echo ${params.TAG}"
+                sh "ls /playbook"
             }
         }
     }
